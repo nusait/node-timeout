@@ -22,9 +22,6 @@ if (Env.secured === true) {
     server = http.createServer(app).listen(Env.port);
 }
 
-var io = require('socket.io')(server);
-
-
 var allowCrossDomain = function(req, res, next) {
     res.header('Access-Control-Allow-Origin', Env['client-domain']);
     res.header('Access-Control-Allow-Credentials', 'true');
