@@ -8,6 +8,7 @@ var https = require('https');
 //var Promise = require('es6-promise').Promise;
 var _ = require('underscore');
 var request = require('request');
+var NanoTimer = require('nanotimer');
 var moment = require('moment');
 var server;
 
@@ -46,6 +47,7 @@ app.use(allowCrossDomain);
 app.post('/timeout', function (req, res) {
     var data = req.body;
     var appName = data.app_name;
+    var timer = new NanoTimer();
     console.log('hey, got your request at ' + moment(new Date()).format('MMMM Do YYYY, h:mm:ss a') );
 
     if ( ! isValidAppName(appName)) {
@@ -68,9 +70,12 @@ app.post('/timeout', function (req, res) {
         console.log('a ' + data.method + ' request was successful! at ' + moment(new Date()).format('MMMM Do YYYY, h:mm:ss a'));
     }
 
-    setTimeout(function () {
+    timer.setTimeout(function () {
         request(requestOptions, callback);
-    }, delay);
+    }, '', delay + 'm');
+    // setTimeout(function () {
+    //     request(requestOptions, callback);
+    // }, delay);
 
     return res.json({message: 'ok!'});
 });
