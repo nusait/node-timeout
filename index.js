@@ -46,7 +46,7 @@ app.use(allowCrossDomain);
 setInterval(function () {
     var result = filterPendingTasks(timeoutTasks);
     timeoutTasks = result.pending;
-    console.log('[' + Date.now() + '] INFO: checked and got ' + result.expired.length + ' expired tasks');
+    //console.log('[' + Date.now() + '] INFO: checked and got ' + result.expired.length + ' expired tasks');
     runTasks(result.expired);
 }, 1000);
 
@@ -72,13 +72,16 @@ app.post('/timeout', function (req, res) {
         }
     };
 
-    function callback() {
-        console.log('[' + Date.now() + '] EVENT: the ' + data.method + ' request was made!');
+    function callback(error, response, body) {
+        if (error) {
+            return console.error('request failed:', error);
+        }
+        console.log('[' + Date.now() + '] EVENT: the ' + data.method + ' request was made! got status of ' + response.statusCode + ' body: ' + body);
     }
 
 
     var taskObj = {
-        expirationTimestamp: (new Date()).getTime() + delay,
+        expirationTimestamp: Date.now() + delay,
         task: function () {
             console.log('[' + Date.now() + '] EVENT: sending to ' + requestOptions.url);
             request(requestOptions, callback);
