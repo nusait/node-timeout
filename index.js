@@ -8,8 +8,6 @@ var https = require('https');
 //var Promise = require('es6-promise').Promise;
 var _ = require('underscore');
 var request = require('request');
-//var NanoTimer = require('nanotimer');
-var moment = require('moment');
 var server;
 var timeoutTasks = [];
 
@@ -46,6 +44,7 @@ app.use(bodyParser.json());
 app.use(allowCrossDomain);
 
 setInterval(function () {
+    console.log('checking at ' + Date.now());
     var result = filterPendingTasks(timeoutTasks);
     timeoutTasks = result.pending;
     runTasks(result.expired);
@@ -62,7 +61,7 @@ app.post('/timeout', function (req, res) {
     var delay = +data.delay_ms; //force type to int
 
     //var timer = new NanoTimer();
-    console.log('hey, got your request of ' + delay + 'ms at ' + moment(new Date()).format('MMMM Do YYYY, h:mm:ss a') );
+    console.log('hey, got your request of ' + delay + 'ms at ' + Date.now());
 
     var requestOptions = {
         url: data.url,
@@ -75,7 +74,7 @@ app.post('/timeout', function (req, res) {
     };
 
     function callback() {
-        console.log('a ' + data.method + ' request was successful! at ' + moment(new Date()).format('MMMM Do YYYY, h:mm:ss a'));
+        console.log('a ' + data.method + ' request was successful! at ' + Date.now());
     }
 
 
