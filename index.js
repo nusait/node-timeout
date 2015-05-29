@@ -55,14 +55,14 @@ setInterval(function () {
 app.post('/timeout', function (req, res) {
     var data = req.body;
     var appName = data.app_name;
-    //var timer = new NanoTimer();
-    console.log('hey, got your request at ' + moment(new Date()).format('MMMM Do YYYY, h:mm:ss a') );
 
     if ( ! isValidAppName(appName)) {
         return res.status(400).json({message: 'not a valid app name'});
     }
-
     var delay = +data.delay_ms; //force type to int
+
+    //var timer = new NanoTimer();
+    console.log('hey, got your request of ' + delay + 'ms at ' + moment(new Date()).format('MMMM Do YYYY, h:mm:ss a') );
 
     var requestOptions = {
         url: data.url,
