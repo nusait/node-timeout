@@ -8,9 +8,10 @@ var https = require('https');
 //var Promise = require('es6-promise').Promise;
 var _ = require('underscore');
 var request = require('request');
-var NanoTimer = require('nanotimer');
+//var NanoTimer = require('nanotimer');
 var moment = require('moment');
 var server;
+var timeoutTasks = [];
 
 if (Env.secured === true) {
 
@@ -44,17 +45,24 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(allowCrossDomain);
 
+setInterval(function () {
+    var result = filterPendingTasks(timeoutTasks);
+    timeoutTasks = result.pending;
+    runTasks(result.expired);
+}, 1000);
+
+
 app.post('/timeout', function (req, res) {
     var data = req.body;
     var appName = data.app_name;
-    var timer = new NanoTimer();
+    //var timer = new NanoTimer();
     console.log('hey, got your request at ' + moment(new Date()).format('MMMM Do YYYY, h:mm:ss a') );
 
     if ( ! isValidAppName(appName)) {
         return res.status(400).json({message: 'not a valid app name'});
     }
 
-    var delay = data.delay_ms;
+    var delay = +data.delay_ms; //force type to int
 
     var requestOptions = {
         url: data.url,
@@ -70,15 +78,54 @@ app.post('/timeout', function (req, res) {
         console.log('a ' + data.method + ' request was successful! at ' + moment(new Date()).format('MMMM Do YYYY, h:mm:ss a'));
     }
 
-    timer.setTimeout(function () {
-        request(requestOptions, callback);
-    }, '', delay + 'm');
+
+    var taskObj = {
+        expirationTimestamp: (new Date()).getTime() + delay,
+        task: function () {
+            request(requestOptions, callback);
+        }
+    };
+
+    timeoutTasks.push(taskObj);
+    //timer.setTimeout(function () {
+    //    request(requestOptions, callback);
+    //}, '', delay + 'm');
     // setTimeout(function () {
     //     request(requestOptions, callback);
     // }, delay);
 
     return res.json({message: 'ok!'});
 });
+
+
+
+function filterPendingTasks(tasks) {
+    var now = Date.now();
+    function isExpired(aTask) {
+        return aTask.expirationTimestamp < now;
+    }
+
+    function isNotExpired(aTask) {
+        return ! isExpired(aTask);
+    }
+
+    var expiredTasks = tasks.filter(isExpired);
+    var pendingTasks = tasks.filter(isNotExpired);
+
+    return {
+        expired: expiredTasks,
+        pending: pendingTasks
+    };
+}
+
+function runTasks(expiredTasks) {
+
+    function runOneTask(expiredTask) {
+        expiredTask.task();
+    }
+
+    expiredTasks.forEach(runOneTask);
+}
 
 function isValidAppName(app) {
     return !! Config.app_events[app];
