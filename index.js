@@ -44,9 +44,9 @@ app.use(bodyParser.json());
 app.use(allowCrossDomain);
 
 setInterval(function () {
-    console.log('checking at ' + Date.now());
     var result = filterPendingTasks(timeoutTasks);
     timeoutTasks = result.pending;
+    console.log('[' + Date.now() + '] INFO: checked and got ' + result.expired.length + ' expired tasks');
     runTasks(result.expired);
 }, 1000);
 
@@ -60,8 +60,7 @@ app.post('/timeout', function (req, res) {
     }
     var delay = +data.delay_ms; //force type to int
 
-    //var timer = new NanoTimer();
-    console.log('hey, got your request of ' + delay + 'ms at ' + Date.now());
+    console.log('[' + Date.now() + '] EVENT: got your timeout request for ' + delay + 'ms');
 
     var requestOptions = {
         url: data.url,
@@ -74,13 +73,14 @@ app.post('/timeout', function (req, res) {
     };
 
     function callback() {
-        console.log('a ' + data.method + ' request was successful! at ' + Date.now());
+        console.log('[' + Date.now() + '] EVENT: the ' + data.method + ' request was made!');
     }
 
 
     var taskObj = {
         expirationTimestamp: (new Date()).getTime() + delay,
         task: function () {
+            console.log('[' + Date.now() + '] EVENT: sending to ' + requestOptions.url);
             request(requestOptions, callback);
         }
     };
